@@ -86,9 +86,7 @@ class TestCoordinatorAgent(unittest.TestCase):
         cleanup_async_tasks()
         release_llm_instances()
 
-        #self.test_dir = tempfile.mkdtemp()
         self.original_cwd = os.getcwd()
-        #os.chdir(self.test_dir)
 
         # Create test spec.md file
         with open("spec.md", "w") as f:
@@ -113,7 +111,6 @@ B: Refinement, step 1
     def tearDown(self):
         """Clean up test environment after each test."""
         os.chdir(self.original_cwd)
-        #shutil.rmtree(self.test_dir)
 
         # Clean up async resources and LLM instances
         try:
@@ -318,14 +315,11 @@ class TestCoordinatorAgentEdgeCases(unittest.TestCase):
         cleanup_async_tasks()
         release_llm_instances()
 
-        #self.test_dir = tempfile.mkdtemp()
         self.original_cwd = os.getcwd()
-        #os.chdir(self.test_dir)
 
     def tearDown(self):
         """Clean up test environment."""
         os.chdir(self.original_cwd)
-        #shutil.rmtree(self.test_dir)
 
         # Clean up async resources and LLM instances
         try:
