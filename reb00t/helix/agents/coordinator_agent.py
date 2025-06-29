@@ -1,15 +1,26 @@
 # agent.py
-from typing import Dict, List
+from typing import Dict, List, Any
 
-from reb00t.helix.progress import ProgressManager
-from reb00t.helix.agents.planner_agent import PlannerAgent
+try:
+    from reb00t.helix.progress import ProgressManager
+    from reb00t.helix.agents.planner import Planner
+    from reb00t.helix.agents.interaction_hook import InteractionHook, CLIInteractionHook
+except ImportError:
+    # For standalone execution
+    import sys
+    import os
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from progress import ProgressManager
+    from reb00t.helix.agents.planner import Planner
+    from agents.interaction_hook import InteractionHook, CLIInteractionHook
 
 class CoordinatorAgent:
     """Agent that executes one iteration of the refinement loop."""
 
-    def __init__(self, progress_manager: ProgressManager):
+    def __init__(self, progress_manager: ProgressManager, interaction_hook: InteractionHook = None):
         self.progress_manager = progress_manager
-        self.planner = PlannerAgent()
+        self.interaction_hook = interaction_hook or CLIInteractionHook()
+        self.planner = Planner(self.interaction_hook, self.progress_manager)
         self.current_progress = None
         self.current_plan = None
         self.test_results = []
@@ -33,15 +44,6 @@ class CoordinatorAgent:
             # Step 1: Plan next refinement
             plan_result = self._plan_next_refinement(spec)
             results["steps_completed"].append("plan")
-
-            if plan_result["user_feedback_required"]:
-                results["user_feedback_required"] = True
-                results["plan"] = plan_result["plan"]
-                self._update_progress("B: Refinement, step 1",
-                                    details=[f"Plan created: {plan_result['plan']['summary']}",
-                                           "Awaiting user feedback/adjustment"],
-                                    notes=[f"Plan details: {plan_result['plan']['description']}"])
-                return results
 
             # Step 2: Adjust e2e test according to plan
             test_result = self._adjust_e2e_test(plan_result["plan"])
@@ -89,46 +91,13 @@ class CoordinatorAgent:
 
     def _plan_next_refinement(self, spec) -> Dict:
         """Step 1: Plan next refinement and ask for user feedback."""
-        # Use the planner agent to generate the plan
-        planner_result = self.planner.create_plan(spec, self.current_progress)
+        # Use the planner to generate the plan and handle user feedback
+        plan_result = self.planner.plan_next_refinement(spec, self.current_progress)
 
-        if not planner_result["success"]:
-            # Fallback to simple plan if planner fails
-            plan = {
-                "summary": "Continue development according to current progress",
-                "description": "Proceed with next development steps based on current state",
-                "goals": ["Continue implementation", "Update tests", "Maintain progress"],
-                "files_to_modify": ["reb00t/helix/agentic_system.py"],
-                "tests_to_add": ["basic_functionality_test"]
-            }
-        else:
-            plan = planner_result["plan"]
-            # Log the analysis for debugging
-            analysis = planner_result.get("analysis", {})
-            self.progress_manager.add_note(f"Plan analysis: {analysis.get('priority_areas', [])}")
+        # Store the current plan for later use
+        self.current_plan = plan_result["plan"]
 
-        self.current_plan = plan
-        self.progress_manager.add_note(f"Generated refinement plan: {plan['summary']}")
-
-        # For now, assume user feedback is not required (auto-approve simple plans)
-        # In a real implementation, this would prompt the user
-        user_feedback_required = self._requires_user_feedback(plan)
-
-        return {
-            "plan": plan,
-            "user_feedback_required": user_feedback_required
-        }
-
-    def _requires_user_feedback(self, plan: Dict) -> bool:
-        """Determine if the plan requires user feedback."""
-        # Simple heuristic: require feedback for complex plans
-        complex_indicators = [
-            len(plan["files_to_modify"]) > 3,
-            "breaking" in plan["description"].lower(),
-            "major" in plan["description"].lower(),
-            "architecture" in plan["description"].lower()
-        ]
-        return any(complex_indicators)
+        return plan_result
 
     def _adjust_e2e_test(self, plan: Dict) -> Dict:
         """Step 2: Adjust e2e test according to plan."""
@@ -189,7 +158,19 @@ class CoordinatorAgent:
 
         # If we get here, implementation failed multiple times
         self.progress_manager.add_note("Implementation failed after maximum attempts")
-        return {"status": "aborted", "attempts": self.max_implementation_attempts}
+
+        # Ask user for guidance on how to proceed
+        user_decision = self._handle_implementation_failure()
+
+        if user_decision["action"] == "stop":
+            return {"status": "aborted", "attempts": self.max_implementation_attempts, "reason": user_decision["reason"]}
+        elif user_decision["action"] == "continue":
+            self.progress_manager.add_note(f"User chose to continue despite failures: {user_decision['guidance']}")
+            return {"status": "continued_with_failures", "attempts": self.max_implementation_attempts}
+
+        # For other actions, we'll still return aborted but with the user's guidance
+        self.progress_manager.add_note(f"User guidance for next iteration: {user_decision['guidance']}")
+        return {"status": "aborted", "attempts": self.max_implementation_attempts, "user_guidance": user_decision["guidance"]}
 
     def _run_e2e_tests(self) -> Dict:
         """Run the e2e tests and return results."""
@@ -347,29 +328,95 @@ class CoordinatorAgent:
 
         return {"status": "pending", "plan": self.current_plan}
 
+    def _request_user_decision(self, title: str, message: str, context: Dict = None) -> Dict[str, Any]:
+        """
+        Request a decision from the user at a critical point in the refinement cycle.
+
+        Args:
+            title: Title for the decision request
+            message: Message explaining what decision is needed
+            context: Additional context information
+
+        Returns:
+            Dictionary containing user feedback with 'text' and 'continue' keys
+        """
+        feedback_context = {
+            "title": title,
+            "message": message
+        }
+
+        if context:
+            feedback_context.update(context)
+
+        return self.interaction_hook.request_user_feedback(feedback_context)
+
+    def _handle_implementation_failure(self) -> Dict:
+        """
+        Handle the case where implementation fails multiple times and ask user for guidance.
+        """
+        feedback_context = {
+            "title": "Implementation Failure",
+            "message": f"Implementation has failed {self.max_implementation_attempts} times. " +
+                      "What would you like to do?",
+            "options": [
+                "1. Try a different approach",
+                "2. Simplify the plan",
+                "3. Stop refinement",
+                "4. Continue anyway"
+            ]
+        }
+
+        user_decision = self.interaction_hook.request_user_feedback(feedback_context)
+
+        if not user_decision["continue"]:
+            return {"action": "stop", "reason": "User chose to stop after implementation failure"}
+
+        # Parse user guidance
+        feedback_text = user_decision["text"].lower()
+        if "different" in feedback_text or "approach" in feedback_text:
+            return {"action": "retry_different", "guidance": user_decision["text"]}
+        elif "simplify" in feedback_text:
+            return {"action": "simplify", "guidance": user_decision["text"]}
+        elif "continue" in feedback_text or "anyway" in feedback_text:
+            return {"action": "continue", "guidance": user_decision["text"]}
+        else:
+            return {"action": "retry", "guidance": user_decision["text"]}
+
 
 # --- Example usage: ---
 if __name__ == "__main__":
-    # Example of running one refinement cycle
-    agent = CoordinatorAgent(ProgressManager())
+    try:
+        from reb00t.helix.agents.interaction_hook import MockInteractionHook
+    except ImportError:
+        from agents.interaction_hook import MockInteractionHook
+
+    # Example of running one refinement cycle with mock interaction hook
+    mock_hook = MockInteractionHook(auto_continue=True, default_feedback="Looks good!")
+    agent = CoordinatorAgent(ProgressManager(), interaction_hook=mock_hook)
 
     print("Starting refinement cycle...")
-    result = agent.run_refinement_cycle(None)
+
+    # Sample spec for testing
+    sample_spec = """
+    # Sample Project Spec
+    ## Goals
+    - Implement core functionality
+    - Add comprehensive testing
+    - Update documentation
+    """
+
+    result = agent.run_refinement_cycle(sample_spec)
 
     print(f"Cycle completed: {result['cycle_completed']}")
     print(f"Steps completed: {result['steps_completed']}")
 
-    if result['user_feedback_required']:
-        print("User feedback required for plan:")
-        print(result['plan']['summary'])
-
-        # Simulate user approval
-        feedback = {"approved": True}
-        agent.accept_user_feedback(feedback)
-
-        # Continue the cycle
-        result = agent.run_refinement_cycle()
-        print(f"Final result: {result}")
-
     if result['errors']:
         print(f"Errors: {result['errors']}")
+
+    print(f"Mock interactions: {mock_hook.interaction_count}")
+
+    # Example with CLI interaction hook (uncomment to test interactively)
+    # print("\n" + "="*50)
+    # print("Testing with CLI interaction hook...")
+    # cli_agent = CoordinatorAgent(ProgressManager())  # Uses CLIInteractionHook by default
+    # cli_result = cli_agent.run_refinement_cycle(sample_spec)
