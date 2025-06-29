@@ -1,4 +1,5 @@
 # agentic_system.py
+import os
 
 class AgenticSystem:
     def __init__(self):
@@ -7,10 +8,37 @@ class AgenticSystem:
         self.progress = 0
         self.history = []
 
-    def load_spec(self, spec_text: str):
-        """Loads or updates the living spec document."""
+    def load_spec(self):
+        """Loads or updates the living spec document from text or file."""
+        file_path = "spec.md"  # Default to reading from spec.md in the current directory
+        project_root = self._find_project_root()
+        spec_file_path = os.path.join(project_root, file_path)
+        spec_text = self._read_spec_file(spec_file_path)
+
         self.spec = spec_text
-        self._record("spec_loaded", {"spec": spec_text})
+        self._record("spec_loaded", {"spec": spec_text, "source": file_path})
+
+    def _read_spec_file(self, file_path: str) -> str:
+        """Reads the spec from a markdown file."""
+        try:
+            with open(file_path, 'r', encoding='utf-8') as file:
+                return file.read()
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Spec file not found: {file_path}")
+        except Exception as e:
+            raise Exception(f"Error reading spec file {file_path}: {str(e)}")
+
+    def _find_project_root(self) -> str:
+        """Finds the project root directory (where spec.md should be located)."""
+        current_dir = os.getcwd()
+        # Go up directories until we find spec.md or reach the root
+        while current_dir != os.path.dirname(current_dir):  # Not at filesystem root
+            if os.path.exists(os.path.join(current_dir, "spec.md")):
+                return current_dir
+            current_dir = os.path.dirname(current_dir)
+
+        # If not found, assume current directory or go up one more level
+        return os.path.dirname(os.path.dirname(current_dir))
 
     def load_playbook(self, playbook: dict):
         """Loads the playbook of steps and rules."""
@@ -47,7 +75,8 @@ class AgenticSystem:
 # --- Example usage: ---
 if __name__ == "__main__":
     system = AgenticSystem()
-    system.load_spec("## System Spec\nSteps: Draft, E2E, Scaffold, Logic, Infra, Done")
+    # Load the actual spec from spec.md file (will use default path)
+    system.load_spec()
     system.load_playbook({
         "steps": [
             {"id": "DRAFT", "goal": "..."},
