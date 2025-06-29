@@ -59,7 +59,7 @@ class AgenticSystem:
             self.progress += 1
             current_step = self.current_step()
             self._record("step_advanced", {"step": current_step})
-            
+
             # Update progress.md with the new step
             self.update_progress_step(current_step)
             return True
@@ -114,14 +114,14 @@ class AgenticSystem:
 # --- Example usage: ---
 if __name__ == "__main__":
     system = AgenticSystem()
-    
+
     # Load the actual spec from spec.md file (will use default path)
     system.load_spec()
-    
+
     # Load current progress from progress.md
     current_progress = system.load_progress()
     print("Current progress:", current_progress)
-    
+
     system.load_playbook({
         "steps": [
             {"id": "DRAFT", "goal": "Draft the spec"},
@@ -130,15 +130,15 @@ if __name__ == "__main__":
             {"id": "DONE", "goal": "Complete implementation"}
         ]
     })
-    
+
     out = system.run_agent({})
     print("Agent Output:", out)
-    
+
     # Add a progress note
     system.add_progress_note("Agent generated initial output")
-    
+
     assert system.advance_step()
     assert system.current_step() == "E2E_RED"
-    
+
     # Check updated progress
     print("Updated progress step:", system.get_current_progress_step())

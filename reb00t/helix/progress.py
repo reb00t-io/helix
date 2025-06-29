@@ -14,11 +14,11 @@ class ProgressManager:
                 "details": [],
                 "notes": []
             }
-        
+
         try:
             with open(self.progress_file_path, 'r', encoding='utf-8') as file:
                 content = file.read()
-            
+
             return self._parse_progress(content)
         except Exception as e:
             raise Exception(f"Error reading progress file {self.progress_file_path}: {str(e)}")
@@ -30,17 +30,17 @@ class ProgressManager:
             "details": [],
             "notes": []
         }
-        
+
         # Split content into sections
         sections = re.split(r'^## ', content, flags=re.MULTILINE)
-        
+
         for section in sections:
             if section.strip().startswith('Step'):
                 # Extract step information
                 lines = section.strip().split('\n')
                 if len(lines) > 1:
                     progress["step"] = lines[1].strip()
-            
+
             elif section.strip().startswith('Details'):
                 # Extract details
                 lines = section.strip().split('\n')[1:]  # Skip the "Details" header
@@ -52,7 +52,7 @@ class ProgressManager:
                         line = re.sub(r'^[-*+]\s*', '', line)
                         details.append(line)
                 progress["details"] = details
-            
+
             elif section.strip().startswith('Notes'):
                 # Extract notes
                 lines = section.strip().split('\n')[1:]  # Skip the "Notes" header
@@ -64,13 +64,13 @@ class ProgressManager:
                         line = re.sub(r'^[-*+]\s*', '', line)
                         notes.append(line)
                 progress["notes"] = notes
-        
+
         return progress
 
     def update_progress(self, step: str = None, details: list = None, notes: list = None):
         """Updates the progress.md file with new information."""
         current_progress = self.load_progress()
-        
+
         # Update fields if provided
         if step is not None:
             current_progress["step"] = step
@@ -78,18 +78,18 @@ class ProgressManager:
             current_progress["details"] = details
         if notes is not None:
             current_progress["notes"] = notes
-        
+
         # Write updated progress back to file
         self._write_progress(current_progress)
 
     def _write_progress(self, progress: dict):
         """Writes the progress data to progress.md file."""
         content = "# Progress\n\n"
-        
+
         # Add Step section
         content += "## Step\n"
         content += f"{progress['step']}\n\n"
-        
+
         # Add Details section
         content += "## Details\n"
         if progress['details']:
@@ -98,7 +98,7 @@ class ProgressManager:
         else:
             content += "- No specific details\n"
         content += "\n"
-        
+
         # Add Notes section
         content += "## Notes\n"
         if progress['notes']:
@@ -106,7 +106,7 @@ class ProgressManager:
                 content += f"- {note}\n"
         else:
             content += "- No additional notes\n"
-        
+
         try:
             with open(self.progress_file_path, 'w', encoding='utf-8') as file:
                 file.write(content)
@@ -139,16 +139,16 @@ class ProgressManager:
 if __name__ == "__main__":
     # Example usage
     pm = ProgressManager()
-    
+
     # Load current progress
     progress = pm.load_progress()
     print("Current progress:", progress)
-    
+
     # Update progress
     pm.update_progress(
         step="B: Refinement, step 2",
         details=["Adjusting e2e test according to plan", "Implementing new features"],
         notes=["Previous step completed successfully", "Ready for implementation phase"]
     )
-    
+
     print("Updated step:", pm.get_current_step())
