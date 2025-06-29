@@ -1,6 +1,7 @@
 # agentic_system.py
 import os
 from reb00t.helix.progress import ProgressManager
+from reb00t.helix.agent import RefinementAgent
 
 class AgenticSystem:
     def __init__(self):
@@ -9,6 +10,7 @@ class AgenticSystem:
         self.progress = 0
         self.history = []
         self.progress_manager = ProgressManager()
+        self._agent = None  # Lazy-loaded RefinementAgent
 
     def load_spec(self):
         """Loads or updates the living spec document from text or file."""
@@ -92,6 +94,36 @@ class AgenticSystem:
         """Returns the current step from progress.md."""
         return self.progress_manager.get_current_step()
 
+    def get_agent(self):
+        """Gets or creates the RefinementAgent instance."""
+        if self._agent is None:
+            self._agent = RefinementAgent(self.progress_manager)
+        return self._agent
+
+    def run_refinement_cycle(self) -> dict:
+        """Runs one complete refinement cycle using the integrated agent."""
+        agent = self.get_agent()
+        result = agent.run_refinement_cycle(self.spec)
+        self._record("refinement_cycle_completed", {"result": result})
+
+        if result.get("error"):
+            # If there was an error, log it and add a note
+            self.add_progress_note(f"Error in refinement cycle: {result['error']}")
+
+        return result
+
+    def accept_user_feedback(self, feedback: dict) -> dict:
+        """Process user feedback on the current refinement plan."""
+        agent = self.get_agent()
+        result = agent.accept_user_feedback(feedback)
+        self._record("user_feedback_processed", {"feedback": feedback, "result": result})
+        return result
+
+    def get_current_plan(self) -> dict:
+        """Gets the current refinement plan if available."""
+        agent = self.get_agent()
+        return agent.current_plan
+
     def current_step(self):
         return self.playbook['steps'][self.progress]['id']
 
@@ -131,6 +163,7 @@ if __name__ == "__main__":
         ]
     })
 
+    # Traditional agent run
     out = system.run_agent({})
     print("Agent Output:", out)
 
@@ -142,3 +175,24 @@ if __name__ == "__main__":
 
     # Check updated progress
     print("Updated progress step:", system.get_current_progress_step())
+
+    print("\n--- Running Refinement Cycle ---")
+
+    # Run a complete refinement cycle
+    refinement_result = system.run_refinement_cycle()
+    print("Refinement cycle completed:", refinement_result["cycle_completed"])
+    print("Steps completed:", refinement_result["steps_completed"])
+
+    if refinement_result["user_feedback_required"]:
+        print("User feedback required for plan:")
+        plan = system.get_current_plan()
+        print(f"Plan: {plan['summary']}")
+
+        # Simulate user approval
+        feedback = {"approved": True}
+        feedback_result = system.accept_user_feedback(feedback)
+        print(f"Feedback processed: {feedback_result['status']}")
+
+        # Run the cycle again after approval
+        final_result = system.run_refinement_cycle()
+        print("Final refinement result:", final_result["cycle_completed"])
