@@ -11,14 +11,16 @@ from reb00t.common.llm.response import JsonResponse
 class AbstractAgent(ABC):
     """Abstract base class for agents that encapsulates LLM client logic."""
 
-    def __init__(self, llm=None):
+    def __init__(self, agent_name, llm=None):
         """
         Initialize the abstract agent with an optional LLM client.
 
         Args:
             llm: Optional LLM client that provides a generate() method
         """
-        self.llm: LLM = LLM.get_default_instance() if llm is None else llm
+        if llm is None:
+            llm: LLM = LLM(cache=True, instance=agent_name)
+        self.llm: LLM = llm
 
     def generate(self, prompt: str, parse_json: bool = False) -> Any:
         """

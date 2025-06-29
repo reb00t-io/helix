@@ -6,7 +6,7 @@ class PlannerAgent(AbstractAgent):
     """Agent that creates refinement plans using LLM analysis of spec and progress."""
 
     def __init__(self, llm_client=None):
-        super().__init__(llm_client)
+        super().__init__("planner", llm_client)
         self.plan_history = []
 
     def create_plan(self, spec: str, current_progress: Dict) -> Dict:

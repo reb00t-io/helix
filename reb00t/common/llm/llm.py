@@ -62,6 +62,10 @@ def append_cache(cache_file, key, value):
 
 instances = set()
 
+def release_llm_instances():
+    global instances
+    instances = set()
+
 def create_client(model_id, model):
     azure_api_key = None
     if model_id == "4o":
@@ -94,7 +98,7 @@ def create_client(model_id, model):
         raise Exception(f"Azure API key too short: '{azure_api_key}'")
 
     api_key_hash = int(hash(azure_api_key)) % 10000
-    print(f"-- Using Azure API key with hash {api_key_hash} for model {model_id}")
+    #print(f"-- Using Azure API key with hash {api_key_hash} for model {model_id}")
     #print(f"-- Azure API key: '{azure_api_key}'")
 
 
