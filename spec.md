@@ -73,7 +73,7 @@ Updates progress.md after each step
     - or abort (refinement failed -> plan has to change)
 5. review spec and decide if a change is needed; if yes, make the change
 6. commit changes
-7. continue with 4a or stop if completed
+7. continue with 1 or stop if completed
 
 ---
 
