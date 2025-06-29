@@ -1,12 +1,12 @@
 # planner_agent.py
 from typing import Dict, List
-import json
+from reb00t.helix.agents.abstract_agent import AbstractAgent
 
-class PlannerAgent:
+class PlannerAgent(AbstractAgent):
     """Agent that creates refinement plans using LLM analysis of spec and progress."""
 
     def __init__(self, llm_client=None):
-        self.llm_client = llm_client
+        super().__init__(llm_client)
         self.plan_history = []
 
     def create_plan(self, spec: str, current_progress: Dict) -> Dict:
@@ -114,17 +114,8 @@ class PlannerAgent:
         # Prepare the prompt for the LLM
         prompt = self._create_planning_prompt(spec, current_progress, analysis)
 
-        if self.llm_client:
-            # Use actual LLM client if available
-            response = self.llm_client.generate(prompt)
-            try:
-                return json.loads(response)
-            except json.JSONDecodeError:
-                # Fallback to rule-based if LLM response is malformed
-                return self._generate_rule_based_plan(analysis)
-        else:
-            # Use rule-based planning as fallback
-            return self._generate_rule_based_plan(analysis)
+        # Use the base class generate method with JSON parsing and fallback
+        return self.generate(prompt, parse_json=True).data
 
     def _create_planning_prompt(self, spec: str, current_progress: Dict, analysis: Dict) -> str:
         """Create a prompt for LLM-based planning."""
@@ -161,17 +152,6 @@ Create a JSON plan with the following structure:
 Focus on the next logical step in the development process. Be specific and actionable.
 """
         return prompt
-
-    def _generate_rule_based_plan(self, analysis: Dict) -> Dict:
-        """Generate a plan using rule-based logic when LLM is not available."""
-        current_step = analysis["current_step"].lower()
-
-        if "preparation" in current_step:
-            return self._create_preparation_plan(analysis)
-        elif "refinement" in current_step:
-            return self._create_refinement_plan(analysis)
-        else:
-            return self._create_default_plan(analysis)
 
     def _create_preparation_plan(self, analysis: Dict) -> Dict:
         """Create a plan for preparation phase."""
@@ -310,10 +290,6 @@ Focus on the next logical step in the development process. Be specific and actio
     def get_plan_history(self) -> List[Dict]:
         """Get the history of generated plans."""
         return self.plan_history.copy()
-
-    def set_llm_client(self, llm_client):
-        """Set the LLM client for plan generation."""
-        self.llm_client = llm_client
 
 
 # --- Example usage: ---
