@@ -35,7 +35,11 @@ class AbstractAgent(ABC):
         """
 
         response_format = { "type": "json_object" } if parse_json else None
-        res, _ = asyncio.run(self.llm.query_simple(prompt, response_format=response_format))
+
+        try:
+            res, _ = asyncio.run(self.llm.query_simple(prompt, response_format=response_format))
+        except Exception as e:
+            raise e
 
         if parse_json:
             try:

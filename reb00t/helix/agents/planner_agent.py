@@ -25,7 +25,7 @@ class PlannerAgent(AbstractAgent):
             analysis = self._analyze_current_state(spec, current_progress)
 
             # Generate plan using LLM
-            plan = self._generate_plan_with_llm(spec, current_progress, analysis)
+            plan = self._generate_plan(spec, current_progress, analysis)
 
             # Validate and enhance the plan
             validated_plan = self._validate_and_enhance_plan(plan)
@@ -108,7 +108,7 @@ class PlannerAgent(AbstractAgent):
 
         return requirements[:10]  # Limit to top 10 most important
 
-    def _generate_plan_with_llm(self, spec: str, current_progress: Dict, analysis: Dict) -> Dict:
+    def _generate_plan(self, spec: str, current_progress: Dict, analysis: Dict) -> Dict:
         """Generate a plan using LLM analysis."""
 
         # Prepare the prompt for the LLM
@@ -139,8 +139,6 @@ Create a JSON plan with the following structure:
 {{
     "summary": "Brief description of the refinement plan",
     "description": "Detailed description of what will be accomplished",
-    "priority": "high|medium|low",
-    "estimated_effort": "small|medium|large",
     "goals": ["goal1", "goal2", "goal3"],
     "files_to_modify": ["file1.py", "file2.py"],
     "tests_to_add": ["test1", "test2"],
@@ -158,8 +156,6 @@ Focus on the next logical step in the development process. Be specific and actio
         return {
             "summary": "Complete preparation phase setup",
             "description": "Establish foundational components and testing framework",
-            "priority": "high",
-            "estimated_effort": "medium",
             "goals": [
                 "Finalize spec documentation",
                 "Set up basic project structure",
@@ -199,8 +195,6 @@ Focus on the next logical step in the development process. Be specific and actio
         return {
             "summary": "Advance refinement implementation",
             "description": "Implement pending features and resolve technical issues",
-            "priority": "high",
-            "estimated_effort": "medium",
             "goals": goals,
             "files_to_modify": [
                 "reb00t/helix/agentic_system.py",
@@ -231,8 +225,6 @@ Focus on the next logical step in the development process. Be specific and actio
         return {
             "summary": "Analyze and plan next steps",
             "description": "Analyze current state and determine next development priorities",
-            "priority": "medium",
-            "estimated_effort": "small",
             "goals": [
                 "Assess current project state",
                 "Identify next priorities",
@@ -267,10 +259,6 @@ Focus on the next logical step in the development process. Be specific and actio
         # Validate goals are actionable
         if not plan["goals"]:
             plan["goals"] = ["Continue development according to spec"]
-
-        # Ensure priority is set
-        if "priority" not in plan:
-            plan["priority"] = "medium"
 
         # Add default success criteria if missing
         if "success_criteria" not in plan or not plan["success_criteria"]:
@@ -320,7 +308,6 @@ if __name__ == "__main__":
         print("Generated Plan:")
         print(f"Summary: {plan['summary']}")
         print(f"Goals: {plan['goals']}")
-        print(f"Priority: {plan['priority']}")
         print(f"Files to modify: {plan['files_to_modify']}")
     else:
         print(f"Plan generation failed: {result['error']}")

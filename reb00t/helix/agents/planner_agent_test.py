@@ -142,8 +142,6 @@ class TestPlannerAgent(unittest.TestCase):
         plan = result["plan"]
         self.assertGreaterEqual(len(plan["goals"]), 3)
         self.assertGreaterEqual(len(plan["files_to_modify"]), 2)
-        self.assertIn(plan["priority"], ["high", "medium", "low"])
-        self.assertIn("estimated_effort", plan)
 
 
 if __name__ == "__main__":
