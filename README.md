@@ -16,7 +16,7 @@ By combining explicit step-tracking, rigorous spec-driven development, and autom
 | Phase | What Happens | Guardrails |
 |-------|---------------|------------|
 | **1 — Playbook & Progress Beacon** | A machine-readable `playbook.yml` lists every step (`SPEC_DRAFT` → `DONE`) with exit conditions. Repo stores a progress beacon (file, tag, or commit prefix). | Pre-commit hook blocks any diff whose step label doesn’t match the beacon. |
-| **2 — Living Spec (Source of Truth)** | LLM drafts `/docs/spec.md` + changelog. Human tweaks → merge → tag `spec@hash`. | CI rejects code if commit header’s spec hash ≠ HEAD of spec. |
+| **2 — Living Spec (Source of Truth)** | LLM drafts `/spec.md` + changelog. Human tweaks → merge → tag `spec@hash`. | CI rejects code if commit header’s spec hash ≠ HEAD of spec. |
 | **3 — Red-Bar e2e Test** | Bot generates high-level end-to-end spec that fails (proves nothing exists). | Exit only when failing reason is missing impl, never flakiness. |
 | **4 — Scaffold & Triangulate Downward** | For each playbook step: interface stub → green e2e → real domain logic + unit/property tests → swap stub adapters for real infra → perf/load tuning. | Each sub-step = atomic green commit, prefixed `STEP[3/7]`. CI enforces mutation score, perf budget, smoke tests. |
 | **5 — Reasoned Amendments** | When tests fail due to wrong assumptions, bot opens “Spec Amendment PR” with spec diff, reason log, and regenerates affected tests/impl once approved. | Every amendment auto-creates an ADR file with a searchable history of “why.” |

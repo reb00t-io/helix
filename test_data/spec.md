@@ -47,15 +47,33 @@ Automate the end-to-end software development process—from initial product idea
 
 ---
 
-## Workflow Overview
+## Workflow
 
-1. Product idea or requirement is added to the spec and approved.
-2. Bot generates failing e2e test (“red bar”), scaffolds first stubs/interfaces.
-3. Each playbook step: bot generates/tests/commits the minimal increment needed, with human review at inflection points.
-4. When the spec is found to be incomplete/incorrect: bot opens a spec amendment PR, logs the reason, and awaits approval.
-5. All changes are small, atomic, always-green, and tied to spec + step.
-6. The process continues stepwise through the playbook until feature is deployed and monitored in prod.
-7. Each cycle’s data is used to further fine-tune the LLM and improve the process.
+### Progress.md
+The file progress.md is updated after each step and tracks the progress of the implementation.
+It has the following sections:
+- "Step": that shows the current dev step, e.g., "A Preparation, step 3".
+- "Details": that lists any required details for the step
+- "Notes": that lists any relevant notes.
+
+### A: preparation
+1. Generate spec.md with product idea and requirements.
+2. Generate progress.md with current state in preparation or refinement loop. File is updated after each step and may contain any additional info. When updating, outdated info is removed.
+3. Generate basic runnable system mockup with interfaces.
+4. Generate e2e test for mockup system.
+
+### B: Refinement loop
+Updates progress.md after each step
+1. plan next refinement; ask user for feedback / adjustment
+2. adjust e2e test according to plan
+3. implement refinement including unit tests
+4. check e2e test is passing and
+    - fix implementation until it passes
+    - or adjust e2e test
+    - or abort (refinement failed -> plan has to change)
+5. review spec and decide if a change is needed; if yes, make the change
+6. commit changes
+7. continue with 4a or stop if completed
 
 ---
 

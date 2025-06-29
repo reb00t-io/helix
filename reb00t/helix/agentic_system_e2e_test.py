@@ -29,9 +29,7 @@ def test_agentic_system_e2e():
 
     # 3. Advance to E2E step
     assert sys.advance_step()
-    assert sys.current_step() == "E2E"
-
-    # 4. Agent acts at E2E step
+    assert sys.current_step() == "E2E"        # 4. Agent acts at E2E step
     agent_out = sys.run_agent({})
     assert "# TODO for step E2E" in agent_out
 
@@ -39,11 +37,23 @@ def test_agentic_system_e2e():
     assert sys.advance_step()
     assert sys.current_step() == "DONE"
 
-    # 6. All history is logged and contains actual spec content
+    # 6. Test progress functionality
+    initial_progress = sys.load_progress()
+    assert initial_progress is not None
+    assert "step" in initial_progress
+
+    # Add a progress note
+    sys.add_progress_note("E2E test completed successfully")
+    updated_progress = sys.load_progress()
+    assert "E2E test completed successfully" in updated_progress["notes"]
+
+    # 7. All history is logged and contains actual spec content
     hist = sys.get_history()
     assert any(e["event"] == "spec_loaded" for e in hist)
     assert any(e["event"] == "step_advanced" for e in hist)
-    assert len(hist) >= 5  # At least spec, playbook, two advances, one agent run
+    assert any(e["event"] == "progress_loaded" for e in hist)
+    assert any(e["event"] == "progress_note_added" for e in hist)
+    assert len(hist) >= 7  # spec, playbook, progress, two advances, one agent run, note added
 
     # Verify that the spec_loaded event contains the actual spec content
     spec_loaded_event = next(e for e in hist if e["event"] == "spec_loaded")
