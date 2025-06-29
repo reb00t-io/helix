@@ -57,14 +57,18 @@ It has the following sections:
 - "Notes": that lists any relevant notes.
 
 ### A: preparation
+Preparation is only run when setting up a new system.
+
 1. Generate spec.md with product idea and requirements.
 2. Generate progress.md with current state in preparation or refinement loop. File is updated after each step and may contain any additional info. When updating, outdated info is removed.
 3. Generate basic runnable system mockup with interfaces.
 4. Generate e2e test for mockup system.
 
 ### B: Refinement loop
+The refinement loop processes tasks from a queue or a single user-provided task.
+
 Updates progress.md after each step
-1. plan next refinement; ask user for feedback / adjustment
+1. based on the task, plan next refinement; ask user for feedback / adjustment
 2. adjust e2e test according to plan
 3. implement refinement including unit tests
 4. check e2e test is passing and

@@ -3,7 +3,7 @@ import tempfile
 import shutil
 import os
 from reb00t.helix.agents.coordinator_agent import CoordinatorAgent
-from reb00t.helix.progress import ProgressManager
+from reb00t.helix.progress_manager import ProgressManager
 
 def test_refinement_agent():
     """Test the RefinementAgent functionality."""

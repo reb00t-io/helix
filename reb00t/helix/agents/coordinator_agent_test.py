@@ -9,7 +9,7 @@ import gc
 import threading
 from reb00t.common.llm.llm import release_llm_instances
 from reb00t.helix.agents.coordinator_agent import CoordinatorAgent
-from reb00t.helix.progress import ProgressManager
+from reb00t.helix.progress_manager import ProgressManager
 from reb00t.helix.agents.interaction_hook import MockInteractionHook
 
 def cleanup_async_tasks():

@@ -2,7 +2,7 @@
 from typing import Dict, List, Any
 
 try:
-    from reb00t.helix.progress import ProgressManager
+    from reb00t.helix.progress_manager import ProgressManager
     from reb00t.helix.agents.planner import Planner
     from reb00t.helix.agents.interaction_hook import InteractionHook, CLIInteractionHook
 except ImportError:
@@ -10,7 +10,7 @@ except ImportError:
     import sys
     import os
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    from progress import ProgressManager
+    from reb00t.helix.progress_manager import ProgressManager
     from reb00t.helix.agents.planner import Planner
     from agents.interaction_hook import InteractionHook, CLIInteractionHook
 

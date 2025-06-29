@@ -2,13 +2,14 @@
 import os
 import tempfile
 import shutil
-from reb00t.helix.progress import ProgressManager
+import json
+from reb00t.helix.progress_manager import ProgressManager
 
 def test_progress_manager():
     """Test the ProgressManager functionality."""
     # Create a temporary directory for testing
     test_dir = tempfile.mkdtemp()
-    test_progress_file = os.path.join(test_dir, "progress.md")
+    test_progress_file = os.path.join(test_dir, "progress.json")
 
     try:
         # Test 1: Initialize ProgressManager with custom path
@@ -19,10 +20,12 @@ def test_progress_manager():
         assert progress["step"] == "A: Preparation, step 1"
         assert progress["details"] == []
         assert progress["notes"] == []
+        assert progress["task"] == ""
         print("✅ Test 1 passed: Default progress loaded correctly")
 
         # Test 3: Update progress and verify file creation
         pm.update_progress(
+            task="tasks/001-hello-world.json",
             step="B: Refinement, step 1",
             details=["Planning next refinement", "Awaiting user feedback"],
             notes=["E2E test framework working", "Ready for refinement loop"]
@@ -34,6 +37,7 @@ def test_progress_manager():
         # Test 4: Load progress from existing file
         progress = pm.load_progress()
         assert progress["step"] == "B: Refinement, step 1"
+        assert progress["task"] == "tasks/001-hello-world.json"
         assert len(progress["details"]) == 2
         assert "Planning next refinement" in progress["details"]
         assert len(progress["notes"]) == 2
@@ -81,16 +85,24 @@ def test_progress_manager():
         assert len(progress["notes"]) == 2
         print("✅ Test 8 passed: Partial update works correctly")
 
-        # Test 10: Verify file content format
-        with open(test_progress_file, 'r') as f:
-            content = f.read()
+        # Test 9: Test task setting and retrieval
+        pm.set_task("tasks/002-complex-task.json")
+        progress = pm.load_progress()
+        assert progress["task"] == "tasks/002-complex-task.json"
+        assert pm.get_current_task() == "tasks/002-complex-task.json"
+        print("✅ Test 8 passed: Task setting and retrieval works correctly")
 
-        assert "# Progress" in content
-        assert "## Step" in content
-        assert "## Details" in content
-        assert "## Notes" in content
-        assert "B: Refinement, step 3" in content
-        print("✅ Test 9 passed: File format is correct")
+        # Test 10: Verify file content format (JSON)
+        with open(test_progress_file, 'r') as f:
+            file_content = json.load(f)
+
+        assert file_content["step"] == "B: Refinement, step 3"
+        assert file_content["task"] == "tasks/002-complex-task.json"
+        assert isinstance(file_content["details"], list)
+        assert isinstance(file_content["notes"], list)
+        assert len(file_content["details"]) == 2
+        assert len(file_content["notes"]) == 2
+        print("✅ Test 9 passed: JSON file format is correct")
 
         print("\n🎉 All tests passed! ProgressManager is working correctly.")
 
@@ -104,41 +116,41 @@ def test_progress_manager():
 
 
 def test_progress_parser():
-    """Test the progress file parser with various formats."""
+    """Test the progress file parser with JSON format."""
     test_dir = tempfile.mkdtemp()
-    test_progress_file = os.path.join(test_dir, "progress.md")
+    test_progress_file = os.path.join(test_dir, "progress.json")
 
     try:
-        # Create a test progress file with specific content
-        test_content = """# Progress
-
-## Step
-B: Refinement, step 1
-
-## Details
-- Planning next refinement
-- Awaiting user feedback/adjustment for implementation direction
-
-## Notes
-- E2E test framework is in place and working
-- AgenticSystem class successfully loads spec from test_data/spec.md
-- Ready to begin refinement loop according to workflow specification
-"""
+        # Create a test progress file with specific JSON content
+        test_data = {
+            "task": "tasks/example-task.json",
+            "step": "B: Refinement, step 1",
+            "details": [
+                "Planning next refinement",
+                "Awaiting user feedback/adjustment for implementation direction"
+            ],
+            "notes": [
+                "E2E test framework is in place and working",
+                "AgenticSystem class successfully loads spec from test_data/spec.md",
+                "Ready to begin refinement loop according to workflow specification"
+            ]
+        }
 
         with open(test_progress_file, 'w') as f:
-            f.write(test_content)
+            json.dump(test_data, f, indent=2)
 
         pm = ProgressManager(test_progress_file)
         progress = pm.load_progress()
 
         assert progress["step"] == "B: Refinement, step 1"
+        assert progress["task"] == "tasks/example-task.json"
         assert len(progress["details"]) == 2
         assert "Planning next refinement" in progress["details"]
         assert "Awaiting user feedback/adjustment for implementation direction" in progress["details"]
         assert len(progress["notes"]) == 3
         assert "E2E test framework is in place and working" in progress["notes"]
 
-        print("✅ Parser test passed: Complex progress file parsed correctly")
+        print("✅ Parser test passed: Complex JSON progress file parsed correctly")
 
     finally:
         shutil.rmtree(test_dir)
