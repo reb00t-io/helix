@@ -1,6 +1,6 @@
 # agentic_system.py
 import os
-from .progress import ProgressManager
+from reb00t.helix.progress import ProgressManager
 
 class AgenticSystem:
     def __init__(self):
