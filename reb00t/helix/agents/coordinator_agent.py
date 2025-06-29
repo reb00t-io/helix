@@ -2,13 +2,15 @@
 from typing import Dict, List
 
 from reb00t.helix.progress import ProgressManager
+from reb00t.helix.agents.planner_agent import PlannerAgent
 
-class RefinementAgent:
+class CoordinatorAgent:
     """Agent that executes one iteration of the refinement loop."""
 
     def __init__(self, progress_manager: ProgressManager):
         self.progress_manager = progress_manager
-        self.current_progrss = None
+        self.planner = PlannerAgent()
+        self.current_progress = None
         self.current_plan = None
         self.test_results = []
         self.implementation_attempts = 0
@@ -87,27 +89,26 @@ class RefinementAgent:
 
     def _plan_next_refinement(self, spec) -> Dict:
         """Step 1: Plan next refinement and ask for user feedback."""
-        # Generate refinement plan based on current state
-        plan = {
-            "summary": "Enhance AgenticSystem with progress integration",
-            "description": "Integrate ProgressManager into AgenticSystem for better progress tracking",
-            "goals": [
-                "Add progress loading functionality",
-                "Implement progress updates on step advancement",
-                "Add methods for adding notes and details",
-                "Update tests to verify progress integration"
-            ],
-            "files_to_modify": [
-                "reb00t/helix/agentic_system.py",
-                "reb00t/helix/agentic_system_e2e_test.py"
-            ],
-            "tests_to_add": [
-                "test_progress_integration",
-                "test_progress_note_addition"
-            ]
-        }
+        # Use the planner agent to generate the plan
+        planner_result = self.planner.create_plan(spec, self.current_progress)
+
+        if not planner_result["success"]:
+            # Fallback to simple plan if planner fails
+            plan = {
+                "summary": "Continue development according to current progress",
+                "description": "Proceed with next development steps based on current state",
+                "goals": ["Continue implementation", "Update tests", "Maintain progress"],
+                "files_to_modify": ["reb00t/helix/agentic_system.py"],
+                "tests_to_add": ["basic_functionality_test"]
+            }
+        else:
+            plan = planner_result["plan"]
+            # Log the analysis for debugging
+            analysis = planner_result.get("analysis", {})
+            self.progress_manager.add_note(f"Plan analysis: {analysis.get('priority_areas', [])}")
 
         self.current_plan = plan
+        self.progress_manager.add_note(f"Generated refinement plan: {plan['summary']}")
 
         # For now, assume user feedback is not required (auto-approve simple plans)
         # In a real implementation, this would prompt the user
@@ -350,7 +351,7 @@ class RefinementAgent:
 # --- Example usage: ---
 if __name__ == "__main__":
     # Example of running one refinement cycle
-    agent = RefinementAgent(ProgressManager())
+    agent = CoordinatorAgent(ProgressManager())
 
     print("Starting refinement cycle...")
     result = agent.run_refinement_cycle(None)

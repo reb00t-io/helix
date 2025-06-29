@@ -1,7 +1,7 @@
 # agentic_system.py
 import os
 from reb00t.helix.progress import ProgressManager
-from reb00t.helix.agent import RefinementAgent
+from reb00t.helix.agents.coordinator_agent import CoordinatorAgent
 
 class AgenticSystem:
     def __init__(self):
@@ -97,7 +97,7 @@ class AgenticSystem:
     def get_agent(self):
         """Gets or creates the RefinementAgent instance."""
         if self._agent is None:
-            self._agent = RefinementAgent(self.progress_manager)
+            self._agent = CoordinatorAgent(self.progress_manager)
         return self._agent
 
     def run_refinement_cycle(self) -> dict:
