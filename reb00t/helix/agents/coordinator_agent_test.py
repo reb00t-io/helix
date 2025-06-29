@@ -1,12 +1,10 @@
 # coordinator_agent_test.py
 import unittest
-import tempfile
-import shutil
 import os
 import asyncio
 import warnings
 import gc
-import threading
+import json
 from reb00t.common.llm.llm import release_llm_instances
 from reb00t.helix.agents.coordinator_agent import CoordinatorAgent
 from reb00t.helix.progress_manager import ProgressManager
@@ -97,16 +95,19 @@ Test specification for agent testing
 1. **Test Component** - For testing purposes
 """)
 
-        # Create test progress.md file
-        with open("progress.md", "w") as f:
-            f.write("""# Progress
-## Step
-B: Refinement, step 1
-## Details
-- Initial test setup
-## Notes
-- Testing agent functionality
-""")
+        # Create test progress.json file
+        test_progress = {
+            "task": "tasks/test-task.json",
+            "step": "B: Refinement, step 1",
+            "details": [
+                "Initial test setup"
+            ],
+            "notes": [
+                "Testing agent functionality"
+            ]
+        }
+        with open("progress.json", "w") as f:
+            json.dump(test_progress, f, indent=2)
 
     def tearDown(self):
         """Clean up test environment after each test."""
@@ -223,12 +224,18 @@ B: Refinement, step 1
         spec = "# Test Spec"
         agent.run_refinement_cycle(spec)
 
-        self.assertTrue(os.path.exists("progress.md"))
+        self.assertTrue(os.path.exists("progress.json"))
 
-        with open("progress.md", "r") as f:
-            progress_content = f.read()
+        # Read and parse the JSON progress file
+        with open("progress.json", "r") as f:
+            progress_data = json.load(f)
 
-        self.assertIn("Refinement cycle completed successfully", progress_content)
+        # Check that the progress was updated correctly
+        self.assertIsInstance(progress_data, dict)
+        self.assertIn("step", progress_data)
+        self.assertIn("details", progress_data)
+        self.assertIn("notes", progress_data)
+        self.assertIn("task", progress_data)
 
     def test_error_handling_missing_spec(self):
         """Test agent error handling with missing spec."""

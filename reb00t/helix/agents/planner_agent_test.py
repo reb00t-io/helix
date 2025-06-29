@@ -27,7 +27,7 @@ class TestPlannerAgent(unittest.TestCase):
         ## Workflow
         ### A: Preparation
         1. Generate spec.md with requirements
-        2. Generate progress.md with current state
+        2. Generate progress.json with current state
         3. Generate basic system mockup
         4. Generate e2e test for system
 

@@ -1,13 +1,10 @@
 {
-  "task": "tasks/001-hello-world.json",
-  "step": "B: Refinement, step 2",
+  "task": "tasks/test-task.json",
+  "step": "B: Refinement, step 1",
   "details": [
-    "Adjusting e2e test according to plan",
-    "Implementing new features"
+    "Plan created but user chose to stop"
   ],
   "notes": [
-    "Previous step completed successfully",
-    "Ready for implementation phase",
-    "Implementation progressing well"
+    "User feedback: Stop refinement"
   ]
 }

@@ -300,7 +300,7 @@ class CoordinatorAgent:
         }
 
     def _update_progress(self, step: str, details: List[str] = None, notes: List[str] = None):
-        """Update progress.md with current step information."""
+        """Update progress.json with current step information."""
         self.progress_manager.update_progress(
             step=step,
             details=details or [],

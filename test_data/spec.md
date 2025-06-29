@@ -49,8 +49,8 @@ Automate the end-to-end software development process—from initial product idea
 
 ## Workflow
 
-### Progress.md
-The file progress.md is updated after each step and tracks the progress of the implementation.
+### Progress.json
+The file progress.json is updated after each step and tracks the progress of the implementation.
 It has the following sections:
 - "Step": that shows the current dev step, e.g., "A Preparation, step 3".
 - "Details": that lists any required details for the step
@@ -58,12 +58,12 @@ It has the following sections:
 
 ### A: preparation
 1. Generate spec.md with product idea and requirements.
-2. Generate progress.md with current state in preparation or refinement loop. File is updated after each step and may contain any additional info. When updating, outdated info is removed.
+2. Generate progress.json with current state in preparation or refinement loop. File is updated after each step and may contain any additional info. When updating, outdated info is removed.
 3. Generate basic runnable system mockup with interfaces.
 4. Generate e2e test for mockup system.
 
 ### B: Refinement loop
-Updates progress.md after each step
+Updates progress.json after each step
 1. plan next refinement; ask user for feedback / adjustment
 2. adjust e2e test according to plan
 3. implement refinement including unit tests

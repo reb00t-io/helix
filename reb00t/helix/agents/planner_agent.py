@@ -15,7 +15,7 @@ class PlannerAgent(AbstractAgent):
 
         Args:
             spec: The project specification content
-            current_progress: Current progress data from progress.md
+            current_progress: Current progress data from progress.json
 
         Returns:
             Dict containing the generated plan
@@ -164,7 +164,7 @@ Focus on the next logical step in the development process. Be specific and actio
             ],
             "files_to_modify": [
                 "spec.md",
-                "progress.md",
+                "progress.json",
                 "test_framework.py"
             ],
             "tests_to_add": [
@@ -231,7 +231,7 @@ Focus on the next logical step in the development process. Be specific and actio
                 "Update progress tracking"
             ],
             "files_to_modify": [
-                "progress.md"
+                "progress.json"
             ],
             "tests_to_add": [],
             "dependencies": [],

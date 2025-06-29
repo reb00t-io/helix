@@ -23,7 +23,7 @@ class AgenticSystem:
         self._record("spec_loaded", {"spec": spec_text, "source": file_path})
 
     def load_progress(self):
-        """Loads the current progress from progress.md file."""
+        """Loads the current progress from progress.json file."""
         progress_data = self.progress_manager.load_progress()
         self._record("progress_loaded", {"progress": progress_data})
         return progress_data
@@ -62,13 +62,13 @@ class AgenticSystem:
             current_step = self.current_step()
             self._record("step_advanced", {"step": current_step})
 
-            # Update progress.md with the new step
+            # Update progress with the new step
             self.update_progress_step(current_step)
             return True
         return False
 
     def update_progress_step(self, step_name: str, details: list = None, notes: list = None):
-        """Updates the progress.md file with new step information."""
+        """Updates the progress.json file with new step information."""
         self.progress_manager.advance_to_next_step(
             new_step=step_name,
             details=details or [f"Working on {step_name}"],
@@ -91,7 +91,7 @@ class AgenticSystem:
         self._record("progress_detail_added", {"detail": detail})
 
     def get_current_progress_step(self) -> str:
-        """Returns the current step from progress.md."""
+        """Returns the current step from progress.json."""
         return self.progress_manager.get_current_step()
 
     def get_agent(self):
@@ -150,7 +150,7 @@ if __name__ == "__main__":
     # Load the actual spec from spec.md file (will use default path)
     system.load_spec()
 
-    # Load current progress from progress.md
+    # Load current progress from progress.json
     current_progress = system.load_progress()
     print("Current progress:", current_progress)
 
